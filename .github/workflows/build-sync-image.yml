@@ -32,7 +32,10 @@ jobs:
           ref="${{ github.event.inputs.logseq_ref || 'fix/db-sync-multi-origin' }}"
           tag="${{ github.event.inputs.image_tag }}"
           if [[ -z "$tag" ]]; then
-            tag="$(date +%Y%m%d)-${ref:0:7}"
+            # Sanitize ref for use as a Docker tag (replace / and other
+            # invalid characters with -)
+            safe_ref="${ref//[^a-zA-Z0-9._-]/-}"
+            tag="$(date +%Y%m%d)-${safe_ref:0:20}"
           fi
           echo "image_tag=$tag" >> "$GITHUB_OUTPUT"
           echo "logseq_ref=$ref" >> "$GITHUB_OUTPUT"
