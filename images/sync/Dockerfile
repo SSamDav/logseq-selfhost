@@ -20,14 +20,21 @@ RUN apt-get update \
 
 RUN curl -fsSL https://mise.run | MISE_VERSION="${MISE_VERSION}" sh
 
+# Install tools from our local mise.toml before cloning the logseq repo
+WORKDIR /tooling
+COPY mise.toml /tooling/mise.toml
+RUN mise trust /tooling/mise.toml && mise install
+
 WORKDIR /src
 RUN git init . \
   && git remote add origin "https://github.com/${LOGSEQ_REPO}.git" \
   && git fetch --depth 1 origin "${LOGSEQ_REF}" \
   && git checkout --detach FETCH_HEAD
 
+COPY mise.toml /src/mise.toml
+RUN mise trust /src/mise.toml
+
 WORKDIR /src/deps/db-sync
-RUN mise trust /src/mise.toml && mise install
 RUN mise exec -- corepack enable
 RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
     mise exec -- pnpm install --frozen-lockfile --ignore-workspace
