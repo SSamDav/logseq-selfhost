@@ -11,6 +11,10 @@ on:
         description: "Optional image tag override"
         required: false
         default: ""
+      no_cache:
+        description: "Set to 'true' to bust the Docker layer cache"
+        required: false
+        default: "false"
 
 permissions:
   contents: read
@@ -32,8 +36,6 @@ jobs:
           ref="${{ github.event.inputs.logseq_ref || 'fix/db-sync-multi-origin' }}"
           tag="${{ github.event.inputs.image_tag }}"
           if [[ -z "$tag" ]]; then
-            # Sanitize ref for use as a Docker tag (replace / and other
-            # invalid characters with -, lowercase)
             safe_ref="${ref//[^a-zA-Z0-9._-]/-}"
             safe_ref="${safe_ref,,}"
             tag="$(date +%Y%m%d)-${safe_ref:0:20}"
@@ -60,6 +62,7 @@ jobs:
           file: images/sync/Dockerfile
           push: true
           platforms: linux/amd64
+          no-cache: ${{ github.event.inputs.no_cache == 'true' }}
           tags: |
             ghcr.io/${{ steps.vars.outputs.image_owner }}/logseq-selfhost-sync:${{ steps.vars.outputs.image_tag }}
             ghcr.io/${{ steps.vars.outputs.image_owner }}/logseq-selfhost-sync:latest
