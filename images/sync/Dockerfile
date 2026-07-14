@@ -36,8 +36,10 @@ RUN mise trust /src/mise.toml
 
 WORKDIR /src/deps/db-sync
 RUN mise exec -- corepack enable
+# Use --no-frozen-lockfile so that the newly-added mldoc dep is resolved
+# even if it is not yet in pnpm-lock.yaml
 RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
-    mise exec -- pnpm install --frozen-lockfile --ignore-workspace
+    mise exec -- pnpm install --no-frozen-lockfile --ignore-workspace
 RUN --mount=type=cache,target=/root/.m2/repository \
     mise exec -- pnpm run build:node-adapter
 RUN CI=true mise exec -- pnpm prune --prod --ignore-workspace
